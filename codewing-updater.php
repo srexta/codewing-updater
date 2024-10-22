@@ -2,7 +2,7 @@
 /**
  * Plugin Name: CodeWing Updater
  * Description: This plugin automates updates from a custom server for CodeWing.
- * Version: 1.0
+ * Version: 1.0.0
  * Author: CodeWing
  * Author URI: https://your-website.com
  * License: GPL
@@ -51,8 +51,6 @@ if ( ! class_exists( 'CodeWing_Updater' ) ) {
             add_filter( 'site_transient_update_plugins', array( $this, 'check_for_updates' ) );
             // Purge cache after update
             add_action( 'upgrader_process_complete', array( $this, 'purge_cache' ), 10, 2 );
-            // Plugins API
-            add_filter( 'plugins_api', array( $this, 'plugins_info' ), 20, 3 );
         }
 
         /**
@@ -61,7 +59,7 @@ if ( ! class_exists( 'CodeWing_Updater' ) ) {
          * @return string The current version of the plugin.
          */
         public function get_version() {
-            return '1.0'; // Update this version whenever necessary
+            return '1.0.0'; // Update this version whenever necessary
         }
 
         /**
@@ -91,7 +89,7 @@ if ( ! class_exists( 'CodeWing_Updater' ) ) {
                 $res->package = esc_url( $remote->download_url );
 
                 $transient->response[ $res->plugin ] = $res;
-            }            
+            }
 
             return $transient;
         }
@@ -106,7 +104,7 @@ if ( ! class_exists( 'CodeWing_Updater' ) ) {
 
             if ( false === $remote ) {
                 $response = wp_remote_get(
-                    'http://sagar-n3jr.wp1.site/wp-content/uploads/2024/10/updater-info.json',
+                    'http://sagar-n3jr.wp1.site/wp-content/uploads/2024/10/updater-info-1.json',
                     array(
                         'timeout' => 10,
                         'headers' => array(
@@ -130,63 +128,6 @@ if ( ! class_exists( 'CodeWing_Updater' ) ) {
             }
 
             return $remote;
-        }
-
-        /**
-         * Plugins Info
-         * 
-         * @param mixed $res
-         * @param mixed $action
-         * @param mixed $args
-         * @return object|false Plugins details.
-         */
-        public function plugins_info( $res, $action, $args ){
-            // do nothing if you're not getting plugin information right now
-			if( 'plugin_information' !== $action ) {
-				return $res;
-			}
-
-			// do nothing if it is not our plugin
-			if( $this->plugin_slug !== $args->slug ) {
-				return $res;
-			}
-
-			// get remote Update info
-			$remote = $this->get_remote_update_info();
-
-			if( ! $remote ) {
-				return $res;
-			}
-
-			$res = new stdClass();
-
-			$res->name = $remote->name;
-			$res->slug = $remote->slug;
-			$res->version = $remote->version;
-			$res->tested = $remote->tested;
-			$res->requires = $remote->requires;
-			$res->author = $remote->author;
-			$res->author_profile = $remote->author_profile;
-			$res->download_link = $remote->download_url;
-			$res->trunk = $remote->download_url;
-			$res->requires_php = $remote->requires_php;
-			$res->last_updated = $remote->last_updated;
-
-			$res->sections = array(
-				'description' => $remote->sections->description,
-				'installation' => $remote->sections->installation,
-				'changelog' => $remote->sections->changelog
-			);
-
-			if( ! empty( $remote->banners ) ) {
-				$res->banners = array(
-					'low' => $remote->banners->low,
-					'high' => $remote->banners->high
-				);
-			}
-
-			return $res;
-
         }
 
         /**

@@ -47,6 +47,10 @@ if ( ! class_exists( 'CodeWing_Updater' ) ) {
          * Initialize the plugin.
          */
         public function init() {
+
+            //adding plugins information
+            add_filter( 'plugins_api', array( $this, 'info' ), 20, 3 );
+
             // Check for updates
             add_filter( 'site_transient_update_plugins', array( $this, 'check_for_updates' ) );
             // Purge cache after update
@@ -129,6 +133,59 @@ if ( ! class_exists( 'CodeWing_Updater' ) ) {
 
             return $remote;
         }
+
+        function info( $res, $action, $args ) {
+
+			// print_r( $action );
+			// print_r( $args );
+
+			// do nothing if you're not getting plugin information right now
+			if( 'plugin_information' !== $action ) {
+				return $res;
+			}
+
+			// do nothing if it is not our plugin
+			if( $this->plugin_slug !== $args->slug ) {
+				return $res;
+			}
+
+			// get updates
+			$remote = $this->get_remote_update_info();
+
+			if( ! $remote ) {
+				return $res;
+			}
+
+			$res = new stdClass();
+
+			$res->name = $remote->name;
+			$res->slug = $remote->slug;
+			$res->version = $remote->version;
+			$res->tested = $remote->tested;
+			$res->requires = $remote->requires;
+			$res->author = $remote->author;
+			$res->author_profile = $remote->author_profile;
+			$res->download_link = $remote->download_url;
+			$res->trunk = $remote->download_url;
+			$res->requires_php = $remote->requires_php;
+			$res->last_updated = $remote->last_updated;
+
+			$res->sections = array(
+				'description' => $remote->sections->description,
+				'installation' => $remote->sections->installation,
+				'changelog' => $remote->sections->changelog
+			);
+
+			if( ! empty( $remote->banners ) ) {
+				$res->banners = array(
+					'low' => $remote->banners->low,
+					'high' => $remote->banners->high
+				);
+			}
+
+			return $res;
+
+		}
 
         /**
          * Purge cache after an update.
